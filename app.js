@@ -15,8 +15,9 @@ const limiter = rateLimit({
 app.use(cors())
 app.use(limiter)
 
-app.get('/stop/:id', async (req, res) => {
-    let apiQuery = await fetch(`https://www.zditm.szczecin.pl/api/v1/displays/${req.params.id}`, {method: 'GET'});
+
+const apiRequest = async (stopNumber) => {
+    let apiQuery = await fetch(`https://www.zditm.szczecin.pl/api/v1/displays/${stopNumber}`, {method: 'GET'});
     let response = await apiQuery.json();
     let busArrivals = response.departures;
     let arrivingBusesArray = []
@@ -43,11 +44,29 @@ app.get('/stop/:id', async (req, res) => {
             })
         }
     });
-    res.json({
+    return({
         'response': response,
         'date': currentTime,
         'busArray': arrivingBusesArray,
     });
+}
+
+app.get('/number/:id', async (req, res) => {
+    let response = await apiRequest(req.params.id)
+    res.json(response)
+})
+
+app.get('/name/:id', async (req, res) => {
+    let apiQueryName = await fetch('https://www.zditm.szczecin.pl/api/v1/stops', {method: 'GET'});
+    let nameResponse = await apiQueryName.json()
+    let stopNumber
+    nameResponse.data.forEach(element => {
+        if (element.name == req.params.id) {
+            stopNumber = element.number
+        }
+    });
+    let response = await apiRequest(stopNumber)
+    res.json(response)
 })
 
 app.listen(port, () => {

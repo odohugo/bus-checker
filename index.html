@@ -6,28 +6,45 @@
     <link rel='stylesheet' href='output.css'>
     <title>Szczecin Bus Checker</title>
 </head>
-<body>
-    <div class='flex flex-col gap-10 items-center justify-center m-auto mt-10 w-fit'>
-        <h1 class="text-xl font-bold text-center text-stone-800">Szczecin Bus Arrival Checker</h1>
-        <div class="flex flex-col items-center justify-center gap-4">
-            <input id='stop-number-input' class="ring-1 px-2 py-1 rounded-md ring-stone-600" type='number' placeholder='Bus stop number'>
-            <button id='query-button' class="ring-1 rounded-md px-2 py-1 ring-stone-600">Search</button>
+<body class='w-screen h-screen bg-gradient-to-b from-stone-200 to-zinc-300'>
+    <div class='flex flex-col gap-10 items-center justify-center m-auto mt-10 w-fit font-mono'>
+        <h1 class='text-3xl font-bold text-center text-stone-800'>Szczecin Bus Arrival Checker</h1>
+        <div class='flex flex-col items-center justify-center gap-4'>
+            <div class='flex gap-20'>
+                <div class='flex flex-col items-center justify-center gap-4'>
+                    <p class='font-bold text-l'>Search by bus stop number:</p>
+                    <input id='stop-number-input' class='ring-1 px-2 py-1 rounded-md ring-stone-600' type='number' placeholder='Bus stop number'>
+                    <button id='number-query-button' class='ring-1 rounded-md px-2 py-1 ring-stone-600 bg-white'>Search</button>
+                </div>
+                <div class='flex flex-col items-center justify-center gap-4'>
+                    <p class='font-bold text-l'>Search by bus stop name:</p>
+                    <input id='stop-name-input' class='ring-1 px-2 py-1 rounded-md ring-stone-600' type='text' placeholder='Bus stop name'>
+                    <button id='name-query-button' class='ring-1 rounded-md px-2 py-1 ring-stone-600 bg-white'>Search</button>
+                </div>
+            </div>
         </div>
-        <div id='results-div' class="flex flex-col align-middle justify-center gap-4"></div>
-        <img src='./spinner.svg' id="spinner" class="hidden"/>
+        <div id='results-div' class='flex flex-col item-center justify-center gap-4'></div>
+        <img src='./spinner.svg' id='spinner' class='hidden'/>
     </div>
 
     <script>
-        let queryButton = document.getElementById('query-button');
-        let stopInput = document.getElementById('stop-number-input');
+        let queryButtonNumber = document.getElementById('number-query-button');
+        let queryButtonName = document.getElementById('name-query-button');
+        let stopInputNumber = document.getElementById('stop-number-input');
+        let stopInputName = document.getElementById('stop-name-input');
         let resultsDiv = document.getElementById('results-div')
         let spinner = document.getElementById('spinner')
 
-        queryButton.addEventListener('click', async () => {
-            spinner.classList.remove('hidden')
-            let stopNumber = stopInput.value
-            let query = await fetch(('http://localhost:3000/stop/' + stopNumber), {method: 'GET'})
+        let apiCall = async (value, isNumber) => {
+            let query
+            if (isNumber) {
+                query = await fetch(('http://localhost:3000/number/' + value), {method: 'GET'})
+            }
+            else {
+                query = await fetch(('http://localhost:3000/name/' + value), {method: 'GET'})
+            }
             let response = await query.json()
+            console.log(response)
             resultsDiv.innerHTML = ""
             response.busArray.forEach(element => {
                 if (element.arrival > 1) {
@@ -36,6 +53,7 @@
                     <p>Line Number: <b>${element.line}</b></p>
                     <p>Arriving in: <b>${element.arrival} minutes</b></p>
                     </div>
+                    <hr>
                     `
                 }
                 else {
@@ -44,9 +62,23 @@
                     <p>Line Number: <b>${element.line}</b></p>
                     <p><b>Arriving now</b></p>
                     </div>
+                    <hr>
                     `
                 }
             });
+        }
+
+        queryButtonNumber.addEventListener('click', async () => {
+            spinner.classList.remove('hidden')
+            let stopNumber = stopInputNumber.value
+            apiCall(stopNumber, true)
+            spinner.classList.add('hidden')
+        });
+        
+        queryButtonName.addEventListener('click', async () => {
+            spinner.classList.remove('hidden')
+            let stopNumber = stopInputName.value
+            apiCall(stopNumber, false)
             spinner.classList.add('hidden')
         });
     </script>
