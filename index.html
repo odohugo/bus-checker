@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+    <meta charset='UTF-8'>
+    <meta name='viewport' content='width=device-width, initial-scale=1.0'>
+    <link rel='stylesheet' href='output.css'>
+    <title>Szczecin Bus Checker</title>
+</head>
+<body>
+    <div class='flex flex-col gap-10 items-center justify-center m-auto mt-10 w-fit'>
+        <h1 class="text-xl font-bold text-center text-stone-800">Szczecin Bus Arrival Checker</h1>
+        <div class="flex flex-col items-center justify-center gap-4">
+            <input id='stop-number-input' class="ring-1 px-2 py-1 rounded-md ring-stone-600" type='number' placeholder='Bus stop number'>
+            <button id='query-button' class="ring-1 rounded-md px-2 py-1 ring-stone-600">Search</button>
+        </div>
+        <div id='results-div' class="flex flex-col align-middle justify-center gap-4"></div>
+        <img src='./spinner.svg' id="spinner" class="hidden"/>
+    </div>
+
+    <script>
+        let queryButton = document.getElementById('query-button');
+        let stopInput = document.getElementById('stop-number-input');
+        let resultsDiv = document.getElementById('results-div')
+        let spinner = document.getElementById('spinner')
+
+        queryButton.addEventListener('click', async () => {
+            spinner.classList.remove('hidden')
+            let stopNumber = stopInput.value
+            let query = await fetch(('http://localhost:3000/stop/' + stopNumber), {method: 'GET'})
+            let response = await query.json()
+            resultsDiv.innerHTML = ""
+            response.busArray.forEach(element => {
+                if (element.arrival > 1) {
+                    resultsDiv.innerHTML += `
+                    <div>
+                    <p>Line Number: <b>${element.line}</b></p>
+                    <p>Arriving in: <b>${element.arrival} minutes</b></p>
+                    </div>
+                    `
+                }
+                else {
+                    resultsDiv.innerHTML += `
+                    <div>
+                    <p>Line Number: <b>${element.line}</b></p>
+                    <p><b>Arriving now</b></p>
+                    </div>
+                    `
+                }
+            });
+            spinner.classList.add('hidden')
+        });
+    </script>
+</body>
+</html>
